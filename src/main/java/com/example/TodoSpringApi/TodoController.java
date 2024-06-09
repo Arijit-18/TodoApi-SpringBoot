@@ -19,6 +19,7 @@ import java.util.List;
 @RequestMapping("/api/v1/todos")
 public class TodoController {
 
+    private static final String TODO_NOT_FOUND = "Todo not found";
     private static List<Todo> todoList;
 
     public TodoController() {
@@ -43,38 +44,53 @@ public class TodoController {
     }
 
     @GetMapping("/{todoId}")
-    public ResponseEntity<Todo> getTodoById(@PathVariable Long todoId) {
+    public ResponseEntity<?> getTodoById(@PathVariable Long todoId) {
         for(Todo todo : todoList) {
             if(todo.getId() == todoId) {
                 return ResponseEntity.ok(todo);
             }
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(TODO_NOT_FOUND);
     }
 
 
     @DeleteMapping("/{todoId}")
-    public ResponseEntity<Todo> deleteTodoById(@PathVariable Long todoId) {
+    public ResponseEntity<?> deleteTodoById(@PathVariable Long todoId) {
+        Todo todoToRemove = null;
         for(Todo todo : todoList) {
             if(todo.getId() == todoId) {
-                todoList.remove(todo);
-                return ResponseEntity.ok(todo);
+                todoToRemove = todo;
+                break;
             }
         }
 
-        return ResponseEntity.notFound().build();
+        if(todoToRemove != null) {
+            todoList.remove(todoToRemove);
+            String deleteSuccessMessage = "Todo deleted successfully";
+            return ResponseEntity.status(HttpStatus.OK).body(deleteSuccessMessage);
+        } else {
+            return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(TODO_NOT_FOUND);
+        }
     }
 
     @PatchMapping("/{todoId}")
-    public ResponseEntity<Todo> updateTodoById(@PathVariable Long todoId) {
+    public ResponseEntity<?> updateTodoById(@PathVariable Long todoId, @RequestParam(required = false) String title, @RequestParam(required = false) Boolean isCompleted, Integer userId) {
         for(Todo todo : todoList) {
             if(todo.getId() == todoId) {
-                todo.setId((int) (todoId * 10));
-                todo.setTitle("Changed to new data");
+                if(title != null) {
+                    todo.setTitle(title);
+                }
+                if(isCompleted != null) {
+                    todo.setCompleted(isCompleted);
+                }
+                if(userId != null) {
+                    todo.setUserId(userId);
+                }
+
                 return ResponseEntity.ok(todo);
             }
         }
 
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(TODO_NOT_FOUND);
     }
 }
