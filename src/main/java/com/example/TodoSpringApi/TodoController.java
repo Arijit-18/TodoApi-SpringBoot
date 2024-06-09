@@ -16,6 +16,7 @@ import java.util.List;
 //http response object
 
 @RestController
+@RequestMapping("/api/v1/todos")
 public class TodoController {
 
     private static List<Todo> todoList;
@@ -26,12 +27,12 @@ public class TodoController {
         todoList.add(new Todo(2, true, "Todo 2", 2));
     }
 
-    @GetMapping("/todos")
+    @GetMapping
     public ResponseEntity<List<Todo>> getTodos() {
         return ResponseEntity.ok(todoList);
     }
 
-    @PostMapping("/todos")
+    @PostMapping
     /**
      * we can use this annotation to set the status code @ResponseStatus(HttpStatus.CREATED)
      * ResponseEntity is a class that helps to manage the whole response object manually
@@ -39,5 +40,41 @@ public class TodoController {
     public ResponseEntity<Todo> createTodo(@RequestBody Todo newTodo) {
         todoList.add(newTodo);
         return ResponseEntity.status(HttpStatus.CREATED).body(newTodo);
+    }
+
+    @GetMapping("/{todoId}")
+    public ResponseEntity<Todo> getTodoById(@PathVariable Long todoId) {
+        for(Todo todo : todoList) {
+            if(todo.getId() == todoId) {
+                return ResponseEntity.ok(todo);
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
+    @DeleteMapping("/{todoId}")
+    public ResponseEntity<Todo> deleteTodoById(@PathVariable Long todoId) {
+        for(Todo todo : todoList) {
+            if(todo.getId() == todoId) {
+                todoList.remove(todo);
+                return ResponseEntity.ok(todo);
+            }
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @PatchMapping("/{todoId}")
+    public ResponseEntity<Todo> updateTodoById(@PathVariable Long todoId) {
+        for(Todo todo : todoList) {
+            if(todo.getId() == todoId) {
+                todo.setId((int) (todoId * 10));
+                todo.setTitle("Changed to new data");
+                return ResponseEntity.ok(todo);
+            }
+        }
+
+        return ResponseEntity.notFound().build();
     }
 }
